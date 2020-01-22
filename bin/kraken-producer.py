@@ -18,7 +18,7 @@ import hmac
 import json
 
 from websocket import create_connection
-import pika
+import kafka
 
 if int(platform.python_version_tuple()[0]) > 2:
     import urllib.request as urllib2
@@ -93,9 +93,9 @@ except Exception as error:
     ws.close()
     sys.exit(1)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-channel = connection.channel()
-channel.queue_declare(queue='all')
+host = 'localhost:9092'
+producer = kafka.KafkaProducer(bootstrap_servers=host)
+kafka.KafkaClient(host).ensure_topic_exists('all')
 while True:
     try:
         api_data = json.loads(ws.recv())
@@ -105,7 +105,7 @@ while True:
                 p, q, t = e[:3]
                 t = round(1000 * float(t))
                 body = ' '.join((str(t), p, q, base, quote, 'kraken'))
-                channel.basic_publish(exchange='', routing_key='all', body=body)
+                producer.send('all', body.encode())
         else:
             print(api_data)
     except KeyboardInterrupt:

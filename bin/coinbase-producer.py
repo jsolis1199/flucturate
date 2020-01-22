@@ -6,7 +6,7 @@ from datetime import datetime # .fromisoformat requires python3.7+
 
 from copra.websocket import Client as COPRAClient
 from copra.websocket import Channel
-import pika
+import kafka
 
 class Client(COPRAClient):
     def __init__(self, loop, channels, feed_url='wss://ws-feed.pro.coinbase.com:443', auth=False, key='', secret='', passphrase='', auto_connect=True, auto_reconnect=True, name='WebSocket Client'):
@@ -20,14 +20,14 @@ class Client(COPRAClient):
             q = message['size']
             base, quote = message['product_id'].split('-')
             body = ' '.join((str(t), p, q, base, quote, 'coinbase'))
-            channel.basic_publish(exchange='', routing_key='all', body=body)
+            producer.send('all', body.encode())
         else:
             print(message)
 
 pairs = argv[1:]
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-channel = connection.channel()
-channel.queue_declare(queue='all')
+host = 'localhost:9092'
+producer = kafka.KafkaProducer(bootstrap_servers=host)
+kafka.KafkaClient(host).ensure_topic_exists('all')
 loop = get_event_loop()
 client = Client(loop, Channel('matches', pairs))
 
