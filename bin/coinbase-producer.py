@@ -19,6 +19,8 @@ class Client(COPRAClient):
             p = message['price']
             q = message['size']
             base, quote = message['product_id'].split('-')
+            base = 'XBT' if base == 'BTC' else base
+            quote = 'XBT' if quote == 'BTC' else quote
             body = ' '.join((str(t), p, q, base, quote, 'coinbase'))
             producer.send('all', body.encode())
         else:
