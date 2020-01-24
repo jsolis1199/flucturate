@@ -103,9 +103,10 @@ while True:
             base, quote = api_data[-1].split('/')
             for e in api_data[1]:
                 p, q, t = e[:3]
-                t = round(1000 * float(t))
-                body = ' '.join((str(t), p, q, base, quote, 'kraken'))
-                producer.send('all', body.encode())
+                t = int(1000 * float(t))
+                key = ' '.join((str(t), base, quote, 'kraken')).encode()
+                value = ' '.join((str(p), str(q))).encode()
+                producer.send('all', key=key, value=value)
         else:
             print(api_data)
     except KeyboardInterrupt:

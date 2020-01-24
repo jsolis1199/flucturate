@@ -15,14 +15,15 @@ class Client(COPRAClient):
     def on_message(self, message):
         if message['type'] == 'match':
             t = datetime.fromisoformat(message['time'].replace('Z', '+00:00'))
-            t = round(1000 * t.timestamp())
+            t = int(1000 * t.timestamp())
             p = message['price']
             q = message['size']
             base, quote = message['product_id'].split('-')
             base = 'XBT' if base == 'BTC' else base
             quote = 'XBT' if quote == 'BTC' else quote
-            body = ' '.join((str(t), p, q, base, quote, 'coinbase'))
-            producer.send('all', body.encode())
+            key = ' '.join((str(t), base, quote, 'coinbase')).encode()
+            value = ' '.join((str(p), str(q))).encode()
+            producer.send('all', key=key, value=value)
         else:
             print(message)
 
