@@ -15,7 +15,7 @@ class Client(COPRAClient):
     def on_message(self, message):
         if message['type'] == 'match':
             t = datetime.fromisoformat(message['time'].replace('Z', '+00:00'))
-            t = int(1000 * t.timestamp())
+            t = int(t.timestamp()) # * 1000)
             p = message['price']
             q = message['size']
             base, quote = message['product_id'].split('-')
