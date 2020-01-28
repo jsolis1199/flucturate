@@ -16,6 +16,8 @@ import base64
 import hashlib
 import hmac
 import json
+from datetime import datetime
+from pytz import utc
 
 from websocket import create_connection
 import kafka
@@ -103,9 +105,9 @@ while True:
             base, quote = api_data[-1].split('/')
             for e in api_data[1]:
                 p, q, t = e[:3]
-                t = int(float(t)) # * 1000)
-                key = ' '.join((str(t), base, quote, 'kraken')).encode()
-                value = ' '.join((str(p), str(q))).encode()
+                t = datetime.fromtimestamp(float(t), tz=utc)
+                key = ','.join((str(t), base, quote, 'kraken')).encode()
+                value = ','.join((str(p), str(q))).encode()
                 producer.send('all', key=key, value=value)
         else:
             print(api_data)

@@ -4,6 +4,7 @@ import os
 
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
+from pyspark.sql.types import TimestampType
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0 pyspark-shell'
 spark = SparkSession.builder.appName('Aggregator').getOrCreate()
@@ -17,12 +18,15 @@ df = spark \
         .load() \
         .selectExpr('CAST(key AS STRING)', 'CAST(value AS STRING)')
 df = df.selectExpr(
-        'key',
-        'CAST(SPLIT(value, " ")[0] AS DOUBLE) AS p',
-        'CAST(SPLIT(value, " ")[1] AS DOUBLE) AS q',
+        'CAST(SPLIT(key, ",")[0] AS TIMESTAMP) AS ts',
+        'SPLIT(key, ",")[1] AS base',
+        'SPLIT(key, ",")[2] AS quote',
+        'SPLIT(key, ",")[3] AS exchange',
+        'CAST(SPLIT(value, ",")[0] AS DOUBLE) AS p',
+        'CAST(SPLIT(value, ",")[1] AS DOUBLE) AS q',
         )
-df = df.groupBy('key').agg((F.sum(df.p * df.q)/F.sum(df.q)).alias('value'))
-df = df.selectExpr('key', 'CAST(value AS STRING)')
+df = df.groupBy(F.window('ts', '1 minute'), 'base', 'quote', 'exchange').agg((F.sum(df.p * df.q)/F.sum(df.q)).alias('value'))
+df = df.selectExpr('CONCAT(window.start, ",", base, ",", quote, ",", exchange) AS key', 'CAST(value AS STRING)')
 query = df \
         .writeStream \
         .outputMode('update') \
