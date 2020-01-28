@@ -4,7 +4,6 @@ import os
 
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
-from pyspark.sql.types import TimestampType
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0 pyspark-shell'
 spark = SparkSession.builder.appName('Aggregator').getOrCreate()
