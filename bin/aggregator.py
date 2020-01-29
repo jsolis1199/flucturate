@@ -33,6 +33,6 @@ query = df \
         .format('kafka') \
         .option('kafka.bootstrap.servers', host) \
         .option('topic', 'agg') \
-        .option('checkpointLocation', 'agg-ckpt/') \
+        .option('checkpointLocation', 'ckpt/') \
         .start()
 query.awaitTermination()

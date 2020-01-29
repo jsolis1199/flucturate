@@ -1,2 +1,5 @@
 .dev/
-log/
+log/*
+!log/.gitkeep
+ckpt/*
+!ckpt/.gitkeep
