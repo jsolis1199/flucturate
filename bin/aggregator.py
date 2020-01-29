@@ -16,22 +16,23 @@ df = spark \
         .option('startingOffsets', 'earliest') \
         .load() \
         .selectExpr('CAST(key AS STRING)', 'CAST(value AS STRING)')
-df = df.selectExpr(
+df = df \
+        .selectExpr(
         'CAST(SPLIT(key, ",")[0] AS TIMESTAMP) AS ts',
         'SPLIT(key, ",")[1] AS base',
         'SPLIT(key, ",")[2] AS quote',
         'SPLIT(key, ",")[3] AS exchange',
         'CAST(SPLIT(value, ",")[0] AS DOUBLE) AS p',
         'CAST(SPLIT(value, ",")[1] AS DOUBLE) AS q',
-        )
+        ) \
+        .withWatermark('ts', '1 minute')
 df = df.groupBy(F.window('ts', '1 minute'), 'base', 'quote', 'exchange').agg((F.sum(df.p * df.q)/F.sum(df.q)).alias('value'))
 df = df.selectExpr('CONCAT(window.start, ",", base, ",", quote, ",", exchange) AS key', 'CAST(value AS STRING)')
 query = df \
         .writeStream \
-        .outputMode('update') \
         .format('kafka') \
         .option('kafka.bootstrap.servers', host) \
         .option('topic', 'agg') \
-        .option('checkpointLocation', 'ckpt/') \
+        .option('checkpointLocation', 'agg-ckpt/') \
         .start()
 query.awaitTermination()
