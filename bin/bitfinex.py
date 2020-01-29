@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
 
 from sys import argv
 from datetime import datetime
-from pytz import utc
 
 from bfxapi import Client
+from pytz import utc
 import kafka
 
 pairs = argv[1:]
@@ -39,7 +39,4 @@ async def start():
         await bfx.ws.subscribe('trades', 't' + e)
 
 bfx.ws.on('connected', start)
-#try:
 bfx.ws.run()
-#except KeyboardInterrupt:
-#    bfx.ws.unsubscribe_all()

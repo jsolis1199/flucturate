@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
 
 from sys import argv
 from asyncio import get_event_loop
-from datetime import datetime # .fromisoformat requires python3.7+
+from datetime import datetime
 
 from copra.websocket import Client as COPRAClient
 from copra.websocket import Channel
