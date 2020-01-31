@@ -7,6 +7,8 @@ from bfxapi import Client
 from pytz import utc
 import kafka
 
+from standardize import standardize
+
 pairs = argv[1:]
 bfx = Client()
 host = 'localhost:9092'
@@ -28,8 +30,7 @@ def log_trade(trade):
         quote = s[3:]
     else:
         base, quote = s.split(':')
-    base = 'XBT' if base == 'BTC' else base
-    quote = 'XBT' if quote == 'BTC' else quote
+    base, quote = standardize(base, quote)
     key = ','.join((str(t), base, quote, 'bitfinex')).encode()
     value = ','.join((str(p), str(q))).encode()
     producer.send('all', key=key, value=value)

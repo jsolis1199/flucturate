@@ -8,6 +8,8 @@ from copra.websocket import Client as COPRAClient
 from copra.websocket import Channel
 import kafka
 
+from standardize import standardize
+
 class Client(COPRAClient):
     def __init__(self, loop, channels, feed_url='wss://ws-feed.pro.coinbase.com:443', auth=False, key='', secret='', passphrase='', auto_connect=True, auto_reconnect=True, name='WebSocket Client'):
         COPRAClient.__init__(self, loop, channels, feed_url=feed_url, auth=auth, key=key, secret=secret, passphrase=passphrase, auto_connect=auto_connect, auto_reconnect=auto_reconnect, name=name)
@@ -18,8 +20,7 @@ class Client(COPRAClient):
             p = message['price']
             q = message['size']
             base, quote = message['product_id'].split('-')
-            base = 'XBT' if base == 'BTC' else base
-            quote = 'XBT' if quote == 'BTC' else quote
+            base, quote = standardize(base, quote)
             key = ','.join((str(t), base, quote, 'coinbase')).encode()
             value = ','.join((str(p), str(q))).encode()
             producer.send('all', key=key, value=value)

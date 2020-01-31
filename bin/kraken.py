@@ -22,6 +22,8 @@ from pytz import utc
 from websocket import create_connection
 import kafka
 
+from standardize import standardize
+
 if int(platform.python_version_tuple()[0]) > 2:
     import urllib.request as urllib2
 else:
@@ -103,6 +105,7 @@ while True:
         api_data = json.loads(ws.recv())
         if isinstance(api_data, list) and api_data[-2] == 'trade':
             base, quote = api_data[-1].split('/')
+            base, quote = standardize(base, quote)
             for e in api_data[1]:
                 p, q, t = e[:3]
                 t = datetime.fromtimestamp(float(t), tz=utc)
