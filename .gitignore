@@ -3,3 +3,5 @@ log/*
 !log/.gitkeep
 ckpt/*
 !ckpt/.gitkeep
+*__pycache__
+*wss.log

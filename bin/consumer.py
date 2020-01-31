@@ -15,7 +15,10 @@ def writeBatch(batch, identifier):
             .options(table='diffs', keyspace='flucturate') \
             .save()
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 --conf spark.cassandra.connection.host=localhost pyspark-shell'
+os.environ['PYSPARK_SUBMIT_ARGS'] = \
+        '--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,' \
+        + 'com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 ' \
+        + '--conf spark.cassandra.connection.host=localhost pyspark-shell'
 spark = SparkSession.builder.appName('Consumer').getOrCreate()
 host = 'localhost:9092'
 df = spark \
@@ -34,7 +37,7 @@ df = spark \
         'CAST(value AS DOUBLE) AS p'
         ) \
         .withWatermark('start', '1 minute')
-exchanges = ('bitfinex', 'coinbase', 'kraken')
+exchanges = ('bitfinex', 'coinbase', 'hitbtc', 'kraken')
 for x, y in combinations(exchanges, 2):
     filtered = df.filter((df.exchange == x) | (df.exchange == y))
     filtered = filtered \
