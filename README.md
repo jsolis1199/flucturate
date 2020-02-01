@@ -5,8 +5,10 @@ The cryptocurrency market evaluator
 ## Setup
 Install third-party packages
 ```shell
-pip3 install kafka-python pyspark pytz bitfinex-api-py copra hitbtc websocket-client
+pip3 install websocket-client==0.40.0
+pip3 install kafka-python pyspark pytz bitfinex-api-py copra hitbtc 
 ```
+The default `websocket-client` dependency (v0.57.0 at time of writing) installed via `pip3 install hitbtc` causes the HitBTC producer to fail.
 
 Initialize Cassandra keyspace
 ```sql
