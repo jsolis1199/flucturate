@@ -3,7 +3,7 @@
 The cryptocurrency market evaluator
 
 ## Setup
-Install third-party packages
+Install third-party packages (to install specifically for `python3.7` replace `pip3` with `python3.7 -m pip`)
 ```shell
 pip3 install websocket-client==0.40.0
 pip3 install kafka-python pyspark pytz bitfinex-api-py copra hitbtc 
