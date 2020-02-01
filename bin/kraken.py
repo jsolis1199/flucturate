@@ -19,7 +19,7 @@ import json
 from datetime import datetime
 from pytz import utc
 
-from websocket import create_connection
+import websocket
 import kafka
 
 from standardize import standardize
@@ -83,7 +83,7 @@ else:
     sys.exit(1)
 
 try:
-    ws = create_connection(api_domain)
+    ws = websocket.create_connection(api_domain)
     print(ws.recv())
 except Exception as error:
     print("WebSocket connection failed (%s)" % error)
@@ -117,10 +117,15 @@ while True:
     except KeyboardInterrupt:
         ws.close()
         sys.exit(0)
-    except Exception as error:
-        print("WebSocket message failed (%s)" % error)
-        ws.close()
-        sys.exit(1)
+    except websocket.WebSocketConnectionClosedException:
+        ws = websocket.create_connection(api_domain)
+        print(ws.recv())
+        ws.send(api_data)
+        print(ws.recv())
+    #except Exception as error:
+    #    print("WebSocket message failed (%s)" % error)
+    #    ws.close()
+    #    sys.exit(1)
 
 ws.close()
 sys.exit(1)
