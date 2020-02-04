@@ -16,6 +16,7 @@ import base64
 import hashlib
 import hmac
 import json
+from os import environ
 from datetime import datetime
 from urllib import request
 
@@ -96,7 +97,7 @@ api_feed = "ping" if len(sys.argv) < 2 else sys.argv[1]
 api_domain, api_data = get_init_params(api_feed)
 ws = get_connection(api_domain)
 subscribe(ws, api_data)
-host = 'localhost:9092'
+host = f'{environ["KAFKA_MASTER"]}:9092'
 producer = kafka.KafkaProducer(bootstrap_servers=host)
 kafka.KafkaClient(host).ensure_topic_exists('all')
 while True:
@@ -122,10 +123,10 @@ while True:
         ws = get_connection(api_domain)
         print('Resubscribing...')
         subscribe(ws, api_data)
-    #except Exception as error:
-    #    print("WebSocket message failed (%s)" % error)
-    #    ws.close()
-    #    sys.exit(1)
+    except Exception as error:
+        print("WebSocket message failed (%s)" % error)
+        ws.close()
+        sys.exit(1)
 
 ws.close()
 sys.exit(1)

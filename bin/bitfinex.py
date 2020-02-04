@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.7
 
 from sys import argv
+from os import environ
 from datetime import datetime
 
 from bfxapi import Client
@@ -11,7 +12,7 @@ from standardize import standardize
 
 pairs = argv[1:]
 bfx = Client()
-host = 'localhost:9092'
+host = f'{environ["KAFKA_MASTER"]}:9092'
 producer = kafka.KafkaProducer(bootstrap_servers=host)
 kafka.KafkaClient(host).ensure_topic_exists('all')
 

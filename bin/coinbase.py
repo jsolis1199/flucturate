@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.7
 
 from sys import argv
+from os import environ
 from asyncio import get_event_loop
 from datetime import datetime
 
@@ -28,7 +29,7 @@ class Client(COPRAClient):
             print(message)
 
 pairs = argv[1:]
-host = 'localhost:9092'
+host = f'{environ["KAFKA_MASTER"]}:9092'
 producer = kafka.KafkaProducer(bootstrap_servers=host)
 kafka.KafkaClient(host).ensure_topic_exists('all')
 loop = get_event_loop()

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3.7
 
+from pathlib import Path
 from time import sleep
 from sys import argv
+from os import environ
 from queue import Empty
 from datetime import datetime
 
@@ -10,23 +12,22 @@ import kafka
 
 from standardize import standardize
 
-def split_symbol(symbol):
-    if symbol[-6:] == 'USDT20':
-        return symbol[:-6], symbol[-6:]
-    elif symbol[-5:] == 'EOSDT':
-        return symbol[:-5], symbol[-5:]
-    elif symbol[-4:] in ['EURS', 'IDRT', 'KRWB', 'USDT', 'USDC']:
-        return symbol[:-4], symbol[-4:]
-    elif symbol[-4:] == 'TUSD' and symbol[:-4] in ['ETH', 'BTC', 'LTC', 'XMR', 'ZRX', 'NEO', 'USD', 'EURS', 'DGB', 'BCH']:
-        return symbol[:-4], symbol[-4:]
-    elif symbol[-4:] == 'GUSD' and symbol[:-4] in ['USDT', 'BTC', 'ETH', 'EOS']:
-        return symbol[:-4], symbol[-4:]
-    elif (symbol[:-4], symbol[-4:]) == ('BTC', 'BUSD'):
-        return symbol[:-4], symbol[-4:]
-    else:
-        return symbol[:-3], symbol[-3:]
-
-host = 'localhost:9092'
+path = str(Path(__file__).parent.parent.absolute()) + '/tmp'
+with open(f'{path}/hitbtc.pair', 'r') as f:
+    split_symbols = [e.replace('\n', '') for e in f.readlines()]
+with open(f'{path}/hitbtc.base', 'r') as f:
+    bases = [e.replace('\n', '') for e in f.readlines()]
+with open(f'{path}/hitbtc.quote', 'r') as f:
+    quotes = [e.replace('\n', '') for e in f.readlines()]
+split_symbols = zip(split_symbols, bases, quotes)
+split_symbols = {s: (b, q) for s, b, q in split_symbols}
+split_symbols = {
+        s: (split_symbols[s][0], 'USDT')
+        if s[-4:] == 'USDT' and split_symbols[s][1] == 'USD'
+        else split_symbols[s]
+        for s in split_symbols
+        }
+host = f'{environ["KAFKA_MASTER"]}:9092'
 producer = kafka.KafkaProducer(bootstrap_servers=host)
 kafka.KafkaClient(host).ensure_topic_exists('all')
 client = HitBTC()
@@ -53,5 +54,4 @@ while True:
             key = ','.join((str(t), base, quote, 'hitbtc')).encode()
             value = ','.join((str(p), str(q))).encode()
             producer.send('all', key=key, value=value)
-
 client.stop()
