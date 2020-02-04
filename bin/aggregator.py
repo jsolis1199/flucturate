@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 
-import os
+from os import environ
 
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
@@ -13,12 +13,8 @@ def writeBatch(batch, identifier):
             .options(table='trades', keyspace='flucturate') \
             .save()
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = \
-        '--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,' \
-        + 'com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 ' \
-        + '--conf spark.cassandra.connection.host=localhost pyspark-shell'
 spark = SparkSession.builder.appName('Aggregator').getOrCreate()
-host = 'localhost:9092'
+host = f'{environ["KAFKA_MASTER"]}:9092'
 df = spark \
         .readStream \
         .format('kafka') \
