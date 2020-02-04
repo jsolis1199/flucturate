@@ -26,19 +26,22 @@ cd flucturate
 
 Start Kafka
 ```shell
-kafka-server-start.sh $KAFKA_HOME/config/server.properties >> log/kafka.log 2>&1
+kafka-server-start.sh "${KAFKA_HOME}/config/server.properties" >> log/kafka.log 2>&1
 ```
 
 Start producers
 ```shell
-bin/bitfinex.py `tr '\n' ' ' < tmp/bitfinex.txt` >> log/bitfinex.log 2>&1
-bin/coinbase.py `tr '\n' ' ' < tmp/coinbase.txt` >> log/coinbase.log 2>&1
-bin/hitbtc_.py `tr '\n' ' ' < tmp/hitbtc.txt` >> log/hitbtc.log 2>&1
-bin/kraken.py trade `tr '\n' ' ' < tmp/kraken.txt` >> log/kraken.log 2>&1
+bin/binance.py com `tr '\n' ' ' < tmp/binance.pair` >> log/binance.log 2>&1
+bin/binance.py je `tr '\n' ' ' < tmp/binance_jersey.pair` >> log/binance_jersey.log 2>&1
+bin/binance.py us `tr '\n' ' ' < tmp/binance_us.pair` >> log/binance_us.log 2>&1
+bin/bitfinex.py `tr '\n' ' ' < tmp/bitfinex.pair` >> log/bitfinex.log 2>&1
+bin/coinbase.py `tr '\n' ' ' < tmp/coinbase.pair` >> log/coinbase.log 2>&1
+bin/hitbtc_.py `tr '\n' ' ' < tmp/hitbtc.pair` >> log/hitbtc.log 2>&1
+bin/kraken.py trade `tr '\n' ' ' < tmp/kraken.pair` >> log/kraken.log 2>&1
 ```
 
 Start aggregator and consumer
 ```shell
-bin/aggregator.py >> log/aggregator.log 2>&1
-bin/consumer.py >> log/consumer.log 2>&1
+spark-submit --master "spark://${AGGREGATOR_MASTER}:7077" --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 --conf spark.cassandra.connection.host="${CASSANDRA_MASTER}" bin/aggregator.py >> log/aggregator.log 2>&1
+spark-submit --master "spark://${CONSUMER_MASTER}:7077" --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 --conf spark.cassandra.connection.host="${CASSANDRA_MASTER}" bin/consumer.py >> log/consumer.log 2>&1
 ```
