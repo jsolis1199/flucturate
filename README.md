@@ -1,20 +1,69 @@
 # FluctuRate
 
-The cryptocurrency market evaluator
+Evaluating the Cryptocurrency Market
 
-## Setup
-Install third-party packages (to install specifically for `python3.7` replace `pip3` with `python3.7 -m pip`)
+## Setup Cassandra Cluster
+
+Install and start Cassandra
 ```shell
-pip3 install websocket-client==0.40.0
-pip3 install kafka-python pyspark pytz bitfinex-api-py copra hitbtc 
+peg install cassandra-cluster cassandra
+peg service cassandra-cluster start
 ```
-The default `websocket-client` dependency (v0.57.0 at time of writing) installed via `pip3 install hitbtc` causes the HitBTC producer to fail.
 
 Initialize Cassandra keyspace
 ```sql
 CREATE KEYSPACE flucturate WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 2};
 CREATE TABLE trades(base text, quote text, time timestamp, exchange text, price double, quantity double, PRIMARY KEY ((base, quote), time, exchange));
 CREATE TABLE diffs(base text, quote text, start timestamp, exchanges text, diff double, PRIMARY KEY ((base, quote), start, exchanges));
+```
+
+Install producer dependencies (to install specifically for `python3.7` replace `pip3` with `python3.7 -m pip`)
+```shell
+pip3 install pytz unicorn-binance-websocket-api bitfinex-api-py copra hitbtc
+pip3 uninstall websocket-client
+pip3 install websocket-client==0.40.0
+```
+The default `websocket-client` dependency (v0.57.0 at time of writing) installed via `pip3 install hitbtc` causes the HitBTC producer to fail.
+
+Add environment variables
+```shell
+export KAFKA_MANAGER=<KAFKA_MANAGER>
+```
+
+## Setup the Spark Clusters (Aggregator and Consumer)
+
+Install and start Hadoop and Spark
+```shell
+peg install <spark-cluster> hadoop
+peg install <spark-cluster> spark
+peg service <spark-cluster> hadoop start
+peg service <spark-cluster> spark start
+```
+
+Install pyspark
+```shell
+pip3 install pyspark
+```
+
+Add environment variables
+```shell
+export KAFKA_MANAGER=<KAFKA_MANAGER>
+export CASSANDRA_MANAGER=<CASSANDRA_MANAGER>
+```
+
+## Setup the Kafka Clusters
+
+Install and start Zookeeper and Kafka
+```shell
+peg install kafka-cluster zookeeper
+peg install kafka-cluster kafka
+peg service kafka-cluster zookeeper start
+peg service kafka-cluster kafka start
+```
+
+Install kafka-python
+```shell
+pip3 install kafka-python
 ```
 
 ## Usage
