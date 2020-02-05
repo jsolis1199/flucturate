@@ -38,6 +38,6 @@ for x, y in combinations(exchanges, 2):
             .writeStream \
             .option('checkpointLocation', f'hdfs://{environ["HADOOP_MASTER"]}:9000/ckpt/') \
             .format("org.apache.spark.sql.cassandra") \
-            .options(table='diffs', keyspace='flucturate')
+            .options(table='diffs', keyspace='flucturate') \
             .start()
 query.awaitTermination()
