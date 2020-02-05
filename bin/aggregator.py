@@ -49,7 +49,7 @@ aggQuery = df \
         .format('kafka') \
         .option('kafka.bootstrap.servers', host) \
         .option('topic', 'agg') \
-        .option('checkpointLocation', '/mnt/ckpt/') \
+        .option('checkpointLocation', f'hdfs://{environ["HADOOP_MASTER"]}:9000/ckpt/') \
         .start()
 allQuery.awaitTermination()
 aggQuery.awaitTermination()
