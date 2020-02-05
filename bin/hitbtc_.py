@@ -49,7 +49,7 @@ while True:
             t = datetime.fromisoformat(message['timestamp'].replace('Z', '+00:00'))
             p = message['price']
             q = message['quantity']
-            base, quote = split_symbol(symbol)
+            base, quote = split_symbols[symbol]
             base, quote = standardize(base, quote)
             key = ','.join((str(t), base, quote, 'hitbtc')).encode()
             value = ','.join((str(p), str(q))).encode()
