@@ -7,14 +7,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import TimestampType
 import pyspark.sql.functions as F
 
-def writeBatch(batch, identifier):
-    batch \
-            .write \
-            .mode('append') \
-            .format('org.apache.spark.sql.cassandra') \
-            .options(table='diffs', keyspace='flucturate') \
-            .save()
-
 spark = SparkSession.builder.appName('Consumer').getOrCreate()
 host = f'{environ["KAFKA_MASTER"]}:9092'
 df = spark \
@@ -44,6 +36,8 @@ for x, y in combinations(exchanges, 2):
     filtered = filtered.filter(filtered.diff != 0)
     query = filtered \
             .writeStream \
-            .foreachBatch(writeBatch) \
+            .option('checkpointLocation', f'hdfs://{environ["HADOOP_MASTER"]}:9000/ckpt/') \
+            .format("org.apache.spark.sql.cassandra") \
+            .options(table='diffs', keyspace='flucturate')
             .start()
 query.awaitTermination()
