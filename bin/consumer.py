@@ -50,6 +50,7 @@ for e in combinations(exchanges, 2):
             .drop('condition')
     query = filtered \
             .writeStream \
+            .option('checkpointLocation', f'hdfs://{environ["HADOOP_MASTER"]}:9000/ckpt/{x}-{y}') \
             .foreachBatch(writeBatch) \
             .start()
 query.awaitTermination()
