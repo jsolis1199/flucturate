@@ -34,17 +34,22 @@ df = spark \
         ) \
         .withWatermark('start', '1 minute')
 exchanges = ('binance', 'binance_jersey', 'binance_us', 'bitfinex', 'coinbase', 'hitbtc', 'kraken')
-for x, y in combinations(exchanges, 2):
+for e in combinations(exchanges, 2):
+    x, y = sorted(e)
     filtered = df.filter((df.exchange == x) | (df.exchange == y))
     filtered = filtered \
+            .withColumn('p', F.when(filtered.exchange == x, -1 * filtered.p).otherwise(filtered.p)) \
+            .drop('exchange')
+    filtered = filtered \
             .groupBy(F.window('start', '1 minute'), 'base', 'quote') \
-            .agg((F.max(df.p) - F.min(df.p)).alias('diff')) \
-            .withColumn('exchanges', F.lit(' '.join(sorted([x, y])))) \
-            .selectExpr('base', 'quote', 'window.start', 'exchanges', 'diff')
-    filtered = filtered.filter(filtered.diff != 0)
+            .agg(F.sum(filtered.p).alias('diff'), (F.max(F.abs(filtered.p)) - F.min(F.abs(filtered.p))).alias('condition')) \
+            .withColumn('exchanges', F.lit(f'{x} {y}')) \
+            .selectExpr('base', 'quote', 'window.start', 'exchanges', 'diff', 'condition')
+    filtered = filtered \
+            .filter(filtered.condition != 0) \
+            .drop('condition')
     query = filtered \
             .writeStream \
-            .option('checkpointLocation', f'hdfs://{environ["HADOOP_MASTER"]}:9000/ckpt/') \
             .foreachBatch(writeBatch) \
             .start()
 query.awaitTermination()
