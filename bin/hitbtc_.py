@@ -20,12 +20,12 @@ with open(f'{path}/hitbtc.base', 'r') as f:
 with open(f'{path}/hitbtc.quote', 'r') as f:
     quotes = [e.replace('\n', '') for e in f.readlines()]
 split_symbols = zip(split_symbols, bases, quotes)
-split_symbols = {s: (b, q) for s, b, q in split_symbols}
 split_symbols = {
-        s: (split_symbols[s][0], 'USDT')
-        if s[-4:] == 'USDT' and split_symbols[s][1] == 'USD'
-        else split_symbols[s]
-        for s in split_symbols
+        s: (
+            'USDT' if b == 'USD' else b,
+            'USDT' if q == 'USD' else q
+            )
+        for s, b, q in split_symbols
         }
 host = f'{environ["KAFKA_MASTER"]}:9092'
 producer = kafka.KafkaProducer(bootstrap_servers=host)

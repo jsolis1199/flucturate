@@ -15,7 +15,7 @@ def writeBatch(batch, identifier):
             .options(table='diffs', keyspace='flucturate') \
             .save()
 
-spark = SparkSession.builder.appName('Consumer').getOrCreate()
+spark = SparkSession.builder.appName('Subtractor').getOrCreate()
 host = f'{environ["KAFKA_MASTER"]}:9092'
 df = spark \
         .readStream \
