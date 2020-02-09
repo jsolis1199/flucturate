@@ -26,6 +26,7 @@ Initialize Cassandra keyspace
 ```sql
 CREATE KEYSPACE flucturate WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 2};
 CREATE TABLE trades(base text, quote text, time timestamp, exchange text, price double, quantity double, PRIMARY KEY ((base, quote), time, exchange));
+CREATE TABLE averages(base text, quote text, start timestamp, exchange text, price double, PRIMARY KEY ((base, quote), start, exchange));
 CREATE TABLE diffs(base text, quote text, start timestamp, exchanges text, diff double, PRIMARY KEY ((base, quote), start, exchanges));
 ```
 
@@ -94,8 +95,9 @@ bin/coinbase.py `tr '\n' ' ' < tmp/coinbase.pair` >> log/coinbase.log 2>&1 &
 bin/hitbtc_.py `tr '\n' ' ' < tmp/hitbtc.pair` >> log/hitbtc.log 2>&1 &
 bin/kraken.py trade `tr '\n' ' ' < tmp/kraken.pair` >> log/kraken.log 2>&1 &
 ```
-On the aggregator cluster, submit the `aggregator.py` job
+On the aggregator cluster, create `ckpt` directory in HDFS and submit the `aggregator.py` job
 ```shell
+hadoop fs -mkdir /ckpt
 spark-submit \
   --master "spark://${AGGREGATOR_MASTER}:7077" \
   --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 \
@@ -103,8 +105,9 @@ spark-submit \
   bin/aggregator.py >> log/aggregator.log 2>&1 &
 ```
 
-On the consumer cluster, submit the `consumer.py` job
+On the consumer cluster, create `ckpt` directory in HDFS and submit the `consumer.py` job
 ```shell
+hadoop fs -mkdir /ckpt
 spark-submit \
   --master "spark://${CONSUMER_MASTER}:7077" \
   --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 \
