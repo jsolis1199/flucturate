@@ -1,5 +1,93 @@
 # FluctuRate: Evaluating the Cryptocurrency Market
 
+## Table of Contents
+
+1. [Motivation](README.md#motivation)
+1. [File Overview](README.md#file-overview)
+1. [Assumptions](README.md#assumptions)
+1. [Setup](README.md#setup)
+1. [Starting the pipeline](README.md#starting-the-pipeline)
+1. [Contact Information](README.md#contact-information)
+
+## Motivation
+
+After Bitcoin's source code was made open source in 2009, thousands of
+cryptocurrencies were created. A decade later, it is estimated that there 
+are still over 1600 active cryptocurrencies available in the global market.
+In addition, there are hundred of cryptocurrency exchanges across the world,
+making it difficult for new traders to navigate the market.
+
+FluctuRate is a data pipeline that consumes live trade data from 5
+cryptocurrency exchanges, computes rate differences for currency pairs that
+are common among the exchanges, and plots the differences. This way, traders
+can determine what exchange offers the best rate to trade their
+cryptocurrencies.
+
+## File Overview
+
+### bin/
+
+`bin/` contains all of FluctuRate's executables, which are meant to be run with
+`python3.7` or higher. The main executables can be grouped into producer scripts and
+PySpark scripts. `bin/` also contains a `standardize.py` module that is
+imported by the producers and a Dash front-end called `plot.py`.
+
+#### Producer Scripts
+
+FluctuRate consumes trades from the following 5 exchanges.
+
+1. Binance
+1. Bitfinex
+1. Coinbase
+1. HitBTC
+1. Kraken
+
+The exchanges each have a producer script of the same name that creates a connection
+to the exchange's WebSocket API, subscribes to the trade channels of the currency
+pairs supplied as command line arguments, and publishes incoming trades to the Kafka topic
+`all`.
+
+#### PySpark Scripts
+
+Ingested trades are sent to `aggregator.py` to be binned into 1-minute windows
+and used to compute an average price for each currency pair at each exchange.
+`aggregator.py` publishes the averages to the Kafka topic `agg` and writes the
+trades and their averages to their respective Cassandra column families.
+
+`subtractor.py` then consumes the averages and splits the stream into a stream
+for every pair of exchanges. Those streams are then used to compute exchange
+rate differences, which are saved to the `diff` column family.
+
+#### standardize.py
+
+Source code for the `standardize` helper function that standardizes ticker symbols.
+Currently, the only problematic symbols are those for Bitcoin and Dogecoin, which are 
+standardized to `XBT` and `XDG` respectively.
+
+#### Front-end
+
+`plot.py` generates a plot of percentage differences in exchange rates for a particular
+currency pair relative to a particular exchange. The currency pair and exchange are selected
+via drop-down lists. 
+
+### tmp/
+
+`tmp/` contains text files that list the currency pairs available at the exchanges. 
+The `.pair` files contain the pair symbols in the format accepted by the respective exchange.
+Binance and HitBTC do not use a delimiter to separate the base and quote cryptocurrencies
+appearing in their symbols, so those exchanges have additional `.base` and `.quote` files
+to split each symbol into their base and quote.
+
+### log/
+
+`log/` is provided as a convenience directory to redirect the output of FluctuRate's executables.
+It's usage is optional and can be ignored.
+
+## Assumptions
+
+* Each Spark cluster has a Hadoop Distributed File System with a `/ckpt` directory
+* The lists in `tmp/` contain all the currency pairs traded at the exchanges  (may not be true after several months)
+
 ## Setup
 
 If using [Pegasus](https://github.com/InsightDataScience/pegasus/) to provision
@@ -97,7 +185,7 @@ bin/kraken.py trade `tr '\n' ' ' < tmp/kraken.pair` >> log/kraken.log 2>&1 &
 ```
 On the aggregator cluster, create `ckpt` directory in HDFS and submit the `aggregator.py` job
 ```shell
-hadoop fs -mkdir /ckpt
+hdfs dfs -mkdir /ckpt
 spark-submit \
   --master "spark://${AGGREGATOR_MASTER}:7077" \
   --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 \
@@ -107,10 +195,15 @@ spark-submit \
 
 On the consumer cluster, create `ckpt` directory in HDFS and submit the `consumer.py` job
 ```shell
-hadoop fs -mkdir /ckpt
+hdfs dfs -mkdir /ckpt
 spark-submit \
   --master "spark://${CONSUMER_MASTER}:7077" \
   --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 \
   --conf spark.cassandra.connection.host="${CASSANDRA_MASTER}" \
   bin/consumer.py >> log/consumer.log 2>&1 &
 ```
+
+## Contact Information
+* [Joel Solis](https://www.linkedin.com/in/jsolis1199)
+* jsolis@alum.mit.edu
+* 956.459.4809
