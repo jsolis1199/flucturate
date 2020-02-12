@@ -138,7 +138,7 @@ echo 'export KAFKA_MASTER=<KAFKA_MASTER>' >> ~/.profile
 source ~/.profile
 ```
 
-### Setup the Spark Clusters (Aggregator and Consumer)
+### Setup the Spark Clusters (Aggregator and Subtractor)
 
 Install and start Hadoop and Spark
 ```shell
@@ -193,14 +193,14 @@ spark-submit \
   bin/aggregator.py >> log/aggregator.log 2>&1 &
 ```
 
-On the consumer cluster, create `ckpt` directory in HDFS and submit the `consumer.py` job
+On the subtractor cluster, create `ckpt` directory in HDFS and submit the `subtractor.py` job
 ```shell
 hdfs dfs -mkdir /ckpt
 spark-submit \
-  --master "spark://${CONSUMER_MASTER}:7077" \
+  --master "spark://${SUBTRACTOR_MASTER}:7077" \
   --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0,com.datastax.spark:spark-cassandra-connector_2.11:2.3.0 \
   --conf spark.cassandra.connection.host="${CASSANDRA_MASTER}" \
-  bin/consumer.py >> log/consumer.log 2>&1 &
+  bin/subtractor.py >> log/subtractor.log 2>&1 &
 ```
 
 ## Contact Information

@@ -156,7 +156,7 @@ def update_graph(dropdown_pair, dropdown_exchange):
         'height': '700',
         'xaxis': {'title': 'UTC - 05:00', 'type': 'Linear'},
         'yaxis': {
-            'title': f'Percent difference in {dropdown_pair} price',
+            'title': f'Relative difference in {dropdown_pair} price',
             'type': 'Linear'
             },
         'plot_bgcolor': colors['background'],
